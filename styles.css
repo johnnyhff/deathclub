@@ -1,0 +1,272 @@
+/* Variáveis de layout */
+:root {
+    /* Inclui a área do notch/barra de status quando roda como app no celular */
+    --topbar-h: calc(36px + env(safe-area-inset-top, 0px));
+}
+
+html {
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+}
+
+/* Resets Básicos e Layout */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #0b0b0e;
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding-top: calc(var(--topbar-h) + 8px); /* Espaço para a Top Bar */
+    padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); /* Espaço para a Dockbar inferior */
+    min-height: 100vh;
+}
+
+/* 1. BARRA SUPERIOR (Estilo GNOME Top Bar) */
+.gnome-bar {
+    background-color: rgba(12, 12, 18, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0, 168, 255, 0.2);
+    height: var(--topbar-h);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+    font-size: 13px;
+}
+
+/* 2. BANNER DE PERFIL */
+.profile-banner {
+    height: 220px;
+    background: linear-gradient(135deg, #001f3f 0%, #000814 100%);
+    background-size: cover;
+    background-position: center;
+    border-bottom: 3px solid #00a8ff;
+    position: relative;
+}
+
+/* 3. DOCKBAR INFERIOR (CORRIGIDA) */
+.dockbar {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: rgba(18, 18, 26, 0.9) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(0, 168, 255, 0.3) !important;
+    border-radius: 20px !important;
+    padding: 8px 16px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    z-index: 9999 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 168, 255, 0.1) !important;
+    width: auto !important;
+    max-width: 90vw !important;
+}
+
+.dock-item {
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 20px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #e2e8f0;
+}
+
+.dock-item:hover {
+    background: rgba(0, 168, 255, 0.25) !important;
+    transform: translateY(-6px) scale(1.15);
+    color: #00a8ff !important;
+}
+
+.dock-item:active {
+    transform: translateY(-2px) scale(1.05);
+}
+
+/* 4. CARDS E ELEMENTOS CUSTOMIZADOS */
+.card-custom {
+    background: #13131a;
+    border: 1px solid rgba(0, 168, 255, 0.15);
+    border-radius: 14px;
+    transition: all 0.25s ease;
+}
+
+.card-custom:hover {
+    border-color: #00a8ff;
+    box-shadow: 0 0 18px rgba(0, 168, 255, 0.2);
+}
+
+/* 5. VISIBILIDADE DAS ABAS */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* 6. SCROLLBARS CUSTOMIZADAS */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* ==========================================
+   7. ABAS: evita o "pulo" de 2px ao trocar de aba
+   (só a aba ativa tinha borda; agora todas reservam o espaço)
+   ========================================== */
+.tab-btn {
+    border-bottom-width: 2px;
+    border-bottom-style: solid;
+}
+
+.tab-btn:not(.border-blue-500) {
+    border-bottom-color: transparent;
+}
+
+/* ==========================================
+   8. CAMADAS (z-index)
+   A top bar é 1000 e a dockbar 9999. Os blocos abaixo
+   usam ID para vencer as classes z-50/z-[60] do Tailwind.
+   ========================================== */
+#alerts-panel {
+    z-index: 1100;
+    top: calc(var(--topbar-h) + 8px);
+    background-color: rgba(19, 19, 26, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 18px rgba(0, 168, 255, 0.12);
+}
+
+#toast-container {
+    z-index: 1200;
+    top: calc(var(--topbar-h) + 16px);
+    left: 12px;
+    right: auto;
+    pointer-events: none; /* o contêiner não bloqueia cliques na página */
+}
+
+#toast-container > div {
+    pointer-events: auto;
+    animation: toast-in 0.25s ease-out;
+}
+
+/* O modal de clima agora cobre também a top bar */
+#weather-modal {
+    z-index: 1300;
+}
+
+/* ==========================================
+   9. ALERTAS: lista, rolagem e foco
+   ========================================== */
+#alerts-list > div {
+    transition: background-color 0.15s ease;
+}
+
+#alerts-list > div:hover {
+    background-color: rgba(0, 168, 255, 0.06);
+}
+
+#alerts-list,
+#weather-modal > div {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 168, 255, 0.35) transparent;
+}
+
+#alerts-list::-webkit-scrollbar,
+#weather-modal > div::-webkit-scrollbar {
+    width: 6px;
+}
+
+#alerts-list::-webkit-scrollbar-thumb,
+#weather-modal > div::-webkit-scrollbar-thumb {
+    background: rgba(0, 168, 255, 0.35);
+    border-radius: 3px;
+}
+
+#bday-next-name {
+    overflow-wrap: anywhere;
+}
+
+[id^="bday-stat-"] {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Foco visível para quem navega pelo teclado */
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid #00a8ff;
+    outline-offset: 2px;
+}
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateX(-12px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ==========================================
+   10. TELAS PEQUENAS
+   ========================================== */
+@media (max-width: 640px) {
+    .gnome-bar {
+        padding-left: max(10px, env(safe-area-inset-left, 0px));
+        padding-right: max(10px, env(safe-area-inset-right, 0px));
+    }
+
+    /* Painel ocupa a largura da tela */
+    #alerts-panel {
+        left: 12px;
+        right: 12px;
+        width: auto;
+        max-width: none;
+    }
+
+    #toast-container {
+        right: 12px;
+        width: auto;
+        max-width: none;
+    }
+
+    /* Com o sino, a barra ficou apertada: esconde o nome do usuário */
+    #usuario {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    /* ...e o grupo de ícones decorativos (wifi, volume, bateria) */
+    .gnome-bar > div:last-child > div:last-child {
+        display: none;
+    }
+}
+
+/* Respeita quem prefere menos movimento */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>DEATH CLUB</title>
+    <meta name="description" content="Hub central do DEATH CLUB: links, biblioteca, aniversários, clima e alertas de desastres no Brasil.">
+
+    <!-- Favicon e ícones do app -->
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+    <!-- Web app (PWA) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta name="application-name" content="DEATH CLUB">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="DEATH CLUB">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Arquivo de Estilos Customizados -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="selection:bg-blue-600 selection:text-white">
+
+    <!-- 1. BARRA SUPERIOR (Estilo GNOME Top Bar) -->
+    <header class="gnome-bar">
+        <div class="flex items-center space-x-3">
+            <button onclick="switchTab('home')" class="text-blue-400 font-bold hover:text-white transition cursor-pointer">
+                Activities
+            </button>
+            <span class="text-gray-600">|</span>
+            <span class="font-semibold text-gray-200 tracking-wider"> <span id="usuario"> </span> </span>
+        </div>
+
+        <!-- Centro: Relógio GNOME em Tempo Real -->
+        <div id="gnome-clock" class="font-bold text-white tracking-wide cursor-default">
+            --:--
+        </div>
+
+        <!-- Lado Direito: Alertas, Tempo, Sistema Operacional e Ícones -->
+        <div class="flex items-center space-x-4 text-gray-300">
+            <!-- Instalar como app (aparece só quando o navegador permite) -->
+            <button id="install-btn" onclick="installApp()" aria-label="Instalar o DEATH CLUB como aplicativo"
+                    class="hidden items-center space-x-1.5 hover:text-blue-400 transition bg-gray-900 px-2.5 py-0.5 rounded-full border border-gray-800 text-xs cursor-pointer">
+                <i class="fa-solid fa-download text-blue-400"></i>
+                <span class="hidden sm:inline">Instalar</span>
+            </button>
+
+            <!-- Sino de alertas de desastres naturais -->
+            <button id="alerts-btn" onclick="toggleAlertsPanel()" aria-label="Alertas de desastres naturais no Brasil" aria-haspopup="true" aria-expanded="false"
+                    class="relative flex items-center hover:text-blue-400 transition cursor-pointer">
+                <i id="alerts-icon" class="fa-solid fa-bell text-base"></i>
+                <span id="alerts-badge" class="hidden absolute -top-1.5 -right-2 bg-amber-600 text-white text-[10px] font-bold leading-none px-1.5 py-0.5 rounded-full">0</span>
+            </button>
+
+            <!-- Botão de Tempo na Top Bar -->
+            <button onclick="toggleWeatherModal()" class="flex items-center space-x-1.5 hover:text-blue-400 transition bg-gray-900 px-2.5 py-0.5 rounded-full border border-gray-800 text-xs cursor-pointer">
+                <i id="topbar-weather-icon" class="fa-solid fa-cloud-sun text-blue-400"></i>
+                <span id="topbar-temp" class="font-mono font-medium">--°C</span>
+            </button>
+
+            <!-- Ícone de Detecção Automática do SO -->
+            <div id="os-badge" class="flex items-center text-gray-300 hover:text-white transition cursor-help" title="Detectando SO...">
+                <i id="os-icon" class="fa-solid fa-desktop text-base"></i>
+            </div>
+
+            <div class="flex items-center space-x-2.5 text-xs text-gray-400">
+                <i class="fa-solid fa-wifi hover:text-blue-400 cursor-pointer"></i>
+                <i class="fa-solid fa-volume-high hover:text-blue-400 cursor-pointer"></i>
+                <i class="fa-solid fa-battery-full text-blue-500"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- PAINEL DE ALERTAS (abre ao clicar no sino) -->
+    <div id="alerts-panel" class="hidden fixed top-11 right-3 w-[22rem] max-w-[calc(100vw-1.5rem)] z-50 bg-[#13131a] border border-blue-500/40 rounded-2xl shadow-2xl overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-earth-americas text-blue-400"></i> Alertas de desastres no Brasil
+            </h3>
+            <div class="flex items-center space-x-3 text-gray-400">
+                <button onclick="refreshDisasterAlerts(); fetchWeatherData();" class="hover:text-blue-400 transition cursor-pointer" aria-label="Atualizar alertas" title="Atualizar agora">
+                    <i class="fa-solid fa-rotate"></i>
+                </button>
+                <button onclick="toggleAlertsPanel(false)" class="hover:text-white transition cursor-pointer" aria-label="Fechar painel">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+        <div id="alerts-list" class="max-h-[60vh] overflow-y-auto divide-y divide-gray-800">
+            <div class="p-6 text-center text-sm text-gray-400">Carregando alertas...</div>
+        </div>
+        <div id="alerts-footer" class="px-4 py-2 border-t border-gray-800 text-[10px] text-gray-500 font-mono">
+            Fontes: Open-Meteo · USGS · NASA EONET · INMET
+        </div>
+    </div>
+
+    <!-- POP-UPS (TOASTS) DE ALERTAS NOVOS -->
+    <div id="toast-container" class="fixed top-14 right-3 z-[60] space-y-2 w-80 max-w-[calc(100vw-1.5rem)]" aria-live="assertive"></div>
+
+    <!-- BANNER DE ALERTA DE EMERGÊNCIA (somente severidade alta) -->
+    <div id="emergency-banner" class="max-w-5xl mx-auto px-4 mt-4 hidden">
+        <div class="bg-red-950/90 border border-red-500/80 text-red-200 px-4 py-3 rounded-xl flex items-center justify-between shadow-lg shadow-red-950/50 backdrop-blur-md">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-triangle-exclamation text-2xl text-red-400 animate-pulse"></i>
+                <div>
+                    <strong class="font-bold text-white uppercase tracking-wider text-xs bg-red-800 px-2 py-0.5 rounded mr-2">Alerta de Emergência</strong>
+                    <span id="emergency-text" class="text-sm font-medium"></span>
+                </div>
+            </div>
+            <button onclick="dismissEmergencyAlert()" class="text-red-300 hover:text-white transition px-2" aria-label="Dispensar alerta">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- NOTIFICAÇÃO DE ANIVERSÁRIO -->
+    <div id="birthday-alert-container" class="max-w-5xl mx-auto px-4 mt-4 hidden">
+        <div class="bg-blue-950/80 border border-blue-500/60 text-blue-200 px-4 py-3 rounded-xl flex items-center justify-between shadow-lg shadow-blue-950/40 backdrop-blur-md">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-cake-candles text-2xl text-blue-400 animate-bounce"></i>
+                <div>
+                    <strong class="font-bold text-white text-sm">Aniversariante do Dia!</strong>
+                    <span id="birthday-alert-text" class="block text-xs text-blue-200 mt-0.5"></span>
+                </div>
+            </div>
+            <button onclick="dismissBirthdayAlert()" class="text-blue-300 hover:text-white transition" aria-label="Dispensar aviso">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="max-w-5xl mx-auto mt-4 px-4">
+
+        <!-- BANNER DE PERFIL -->
+        <div class="profile-banner rounded-2xl shadow-2xl relative overflow-hidden flex items-end p-6 border border-gray-800">
+            <div class="absolute inset-0 bg-gradient-to-t from-[#0b0b0e] via-[#0b0b0e]/40 to-transparent"></div>
+
+            <div class="relative z-10 flex items-center space-x-5 w-full">
+                <!-- Imagem Generica -->
+                <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-black border-4 border-blue-500 overflow-hidden shadow-2xl flex-shrink-0">
+                    <img id="profile-img" src="deathclub.jpg" alt="Avatar" class="w-full h-full object-cover">
+                </div>
+
+                <div class="flex justify-between items-end w-full">
+                    <div>
+                        <h1 class="text-2xl sm:text-4xl font-black tracking-wider text-white flex items-center gap-3 font-mono">
+                            DEATH CLUB
+                        </h1>
+                        <p class="text-gray-400 text-xs sm:text-sm mt-1">Hub Central de Serviços, Mídia e Conexões Globais.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABAS DE NAVEGAÇÃO INTERNA (cada botão tem a classe tab-btn, usada pelo JS) -->
+        <div class="flex border-b border-gray-800 mt-6 space-x-6 text-sm font-semibold overflow-x-auto pb-1 no-scrollbar">
+            <button onclick="switchTab('home')" id="btn-home" class="tab-btn pb-3 text-blue-400 border-b-2 border-blue-500 transition whitespace-nowrap cursor-pointer">Perfil / Início</button>
+            <button onclick="switchTab('hub')" id="btn-hub" class="tab-btn pb-3 text-gray-400 hover:text-white transition whitespace-nowrap cursor-pointer">Hub de Links</button>
+            <button onclick="switchTab('services')" id="btn-services" class="tab-btn pb-3 text-gray-400 hover:text-white transition whitespace-nowrap cursor-pointer">Divulgações & Serviços</button>
+            <button onclick="switchTab('library')" id="btn-library" class="tab-btn pb-3 text-gray-400 hover:text-white transition whitespace-nowrap cursor-pointer">Biblioteca</button>
+            <button onclick="switchTab('news')" id="btn-news" class="tab-btn pb-3 text-gray-400 hover:text-white transition whitespace-nowrap cursor-pointer">Notícias</button>
+            <button onclick="switchTab('birthdays')" id="btn-birthdays" class="tab-btn pb-3 text-gray-400 hover:text-white transition flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                Aniversários <span id="badge-bday" class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span>
+            </button>
+        </div>
+
+        <!-- ABA 1: PERFIL / INÍCIO -->
+        <section id="tab-home" class="tab-content active mt-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="card-custom p-6 md:col-span-2">
+                    <h2 class="text-lg font-bold text-blue-400 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-terminal"></i> Sobre o DEATH CLUB OS
+                    </h2>
+                    <p class="text-gray-300 text-sm leading-relaxed mb-4">
+                        Bem-vindo à plataforma central do <strong class="text-white">DEATH CLUB</strong>. O sistema conta com barra superior estilo GNOME, biblioteca de links rápidos, hub de serviços internos, monitor meteorológico e central de alertas de desastres naturais.
+                    </p>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <span class="bg-blue-950/60 text-blue-300 border border-blue-800/50 px-2.5 py-1 rounded-md">Open-Meteo API</span>
+                        <span class="bg-blue-950/60 text-blue-300 border border-blue-800/50 px-2.5 py-1 rounded-md">Alertas de Desastres</span>
+                        <span class="bg-blue-950/60 text-blue-300 border border-blue-800/50 px-2.5 py-1 rounded-md">FOSS Links</span>
+                        <span class="bg-blue-950/60 text-blue-300 border border-blue-800/50 px-2.5 py-1 rounded-md">GNOME Layout</span>
+                    </div>
+                </div>
+
+                <div class="card-custom p-6">
+                    <h2 class="text-lg font-bold text-blue-400 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line"></i> Status do Sistema
+                    </h2>
+                    <ul class="text-sm space-y-3 text-gray-300 font-mono">
+                        <li class="flex justify-between border-b border-gray-800/60 pb-1.5">
+                            <span class="text-gray-400">Servidor:</span> <span class="text-blue-400 font-bold">Online</span>
+                        </li>
+                        <li class="flex justify-between border-b border-gray-800/60 pb-1.5">
+                            <span class="text-gray-400">Segurança:</span> <span class="text-blue-400 font-bold">Encrypted</span>
+                        </li>
+                        <li class="flex justify-between border-b border-gray-800/60 pb-1.5">
+                            <span class="text-gray-400">Sistema Operacional:</span> <span id="sys-status-os" class="text-white font-bold">Detectando...</span>
+                        </li>
+                        <li class="flex justify-between border-b border-gray-800/60 pb-1.5">
+                            <span class="text-gray-400">Navegador:</span> <span id="sys-status-browser" class="text-white font-bold">Detectando...</span>
+                        </li>
+                        <li class="flex justify-between">
+                            <span class="text-gray-400">Estética:</span> <span class="text-blue-400 font-bold">Cyber Dark</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 2: HUB DE LINKS -->
+        <section id="tab-hub" class="tab-content mt-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-blue-400">
+                <i class="fa-solid fa-globe"></i> Hub de Links & Plataformas
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <a href="https://t.me/+WV-XZc7-_dHQ3Xy0" target="_blank" rel="noopener noreferrer" class="card-custom p-4 flex items-center space-x-4 hover:border-blue-500">
+                    <div class="bg-blue-950 p-3 rounded-xl text-blue-400 text-xl"><i class="fa-brands fa-telegram"></i></div>
+                    <div>
+                        <h3 class="font-bold text-white">Telegram</h3>
+                        <p class="text-xs text-gray-400">Canal e grupo oficial</p>
+                    </div>
+                </a>
+                <a href="https://app.gather.town/app/TpBeomkViPVDd8Cq/Death%20Clubn" target="_blank" rel="noopener noreferrer" class="card-custom p-4 flex items-center space-x-4 hover:border-blue-500">
+                    <div class="bg-blue-950 p-3 rounded-xl text-blue-400 text-xl"><i class="fa-solid fa-people-roof"></i></div>
+                    <div>
+                        <h3 class="font-bold text-white">Gather</h3>
+                        <p class="text-xs text-gray-400">Espaço virtual interativo</p>
+                    </div>
+                </a>
+                <a href="https://github.com/johnnyhff/deathclub" target="_blank" rel="noopener noreferrer" class="card-custom p-4 flex items-center space-x-4 hover:border-blue-500">
+                    <div class="bg-blue-950 p-3 rounded-xl text-blue-400 text-xl"><i class="fa-brands fa-github"></i></div>
+                    <div>
+                        <h3 class="font-bold text-white">GitHub</h3>
+                        <p class="text-xs text-gray-400">Repositórios e códigos</p>
+                    </div>
+                </a>
+                <a href="https://discord.gg/DM9d8C3" target="_blank" rel="noopener noreferrer" class="card-custom p-4 flex items-center space-x-4 hover:border-blue-500">
+                    <div class="bg-blue-950 p-3 rounded-xl text-blue-400 text-xl"><i class="fa-brands fa-discord"></i></div>
+                    <div>
+                        <h3 class="font-bold text-white">Discord</h3>
+                        <p class="text-xs text-gray-400">Servidor da comunidade</p>
+                    </div>
+                </a>
+                <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="card-custom p-4 flex items-center space-x-4 hover:border-blue-500">
+                    <div class="bg-blue-950 p-3 rounded-xl text-blue-400 text-xl"><i class="fa-brands fa-youtube"></i></div>
+                    <div>
+                        <h3 class="font-bold text-white">YouTube</h3>
+                        <p class="text-xs text-gray-400">Transmissões e vídeos</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- ABA 3: CARDÁPIO DE SERVIÇOS / DIVULGAÇÕES -->
+        <section id="tab-services" class="tab-content mt-6">
+            <h2 class="text-xl font-bold mb-2 flex items-center gap-2 text-blue-400">
+                <i class="fa-solid fa-list-check"></i> Divulgações Internas
+            </h2>
+            <p class="text-gray-400 text-sm mb-4">Catálogo de serviços oferecidos e links internos de divulgação.</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <a href="https://johnnyhff.github.io/goodvibrations" class="card-custom p-4 flex items-center space-x-4 hover:border-blue-500">
+                    <div class="bg-blue-950 p-3 rounded-xl text-blue-400 text-xl"><i class="fa-solid fa-radio"></i></div>
+                    <div>
+                        <h3 class="font-bold text-white">Good Vibrations</h3>
+                        <p class="text-xs text-gray-400">Programa De Rádio</p>
+                    </div>
+                </a>
+
+                <a href="#" class="card-custom p-4 flex items-center space-x-4 hover:border-blue-500">
+                    <div class="bg-blue-950 p-3 rounded-xl text-blue-400 text-xl"><i class="fa-solid fa-palette"></i></div>
+                    <div>
+                        <h3 class="font-bold text-white">Design & UI/UX</h3>
+                        <p class="text-xs text-gray-400">Identidade visual e proto-layouts</p>
+                    </div>
+                </a>
+
+                <a href="#" class="card-custom p-4 flex items-center space-x-4 hover:border-blue-500">
+                    <div class="bg-blue-950 p-3 rounded-xl text-blue-400 text-xl"><i class="fa-solid fa-server"></i></div>
+                    <div>
+                        <h3 class="font-bold text-white">Hospedagem & Servidores</h3>
+                        <p class="text-xs text-gray-400">Deploy e infraestrutura cloud</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- ABA 4: BIBLIOTECA -->
+        <section id="tab-library" class="tab-content mt-6">
+            <h2 class="text-xl font-bold mb-2 flex items-center gap-2 text-blue-400">
+                <i class="fa-solid fa-book-bookmark"></i> Biblioteca & Mídias
+            </h2>
+            <p class="text-gray-400 text-sm mb-4">Acesso direto às coleções de música, filmes, livros e software livre (FOSS).</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <a href="https://t.me/c/1499436901/159" target="_blank" rel="noopener noreferrer" class="card-custom p-4 flex items-center space-x-4 hover:border-blue-500">
+                    <div class="bg-blue-950 p-3 rounded-xl text-blue-400 text-xl"><i class="fa-solid fa-music"></i></div>
+                    <div>
+                        <h3 class="font-bold text-white">Música</h3>
+                        <p class="text-xs text-gray-400">Playlists e áudios</p>
+                    </div>
+                </a>
+                <a href="https://t.me/c/1499436901/160" target="_blank" rel="noopener noreferrer" class="card-custom p-4 flex items-center space-x-4 hover:border-blue-500">
+                    <div class="bg-blue-950 p-3 rounded-xl text-blue-400 text-xl"><i class="fa-solid fa-film"></i></div>
+                    <div>
+                        <h3 class="font-bold text-white">Filmes</h3>
+                        <p class="text-xs text-gray-400">Acervo e resenhas</p>
+                    </div>
+                </a>
+                <a href="https://t.me/c/1499436901/161" target="_blank" rel="noopener noreferrer" class="card-custom p-4 flex items-center space-x-4 hover:border-blue-500">
+                    <div class="bg-blue-950 p-3 rounded-xl text-blue-400 text-xl"><i class="fa-solid fa-book"></i></div>
+                    <div>
+                        <h3 class="font-bold text-white">Livros</h3>
+                        <p class="text-xs text-gray-400">Ebooks e documentos</p>
+                    </div>
+                </a>
+                <a href="https://t.me/c/1499436901/164" target="_blank" rel="noopener noreferrer" class="card-custom p-4 flex items-center space-x-4 hover:border-blue-500">
+                    <div class="bg-blue-950 p-3 rounded-xl text-blue-400 text-xl"><i class="fa-solid fa-code-branch"></i></div>
+                    <div>
+                        <h3 class="font-bold text-white">FOSS</h3>
+                        <p class="text-xs text-gray-400">Software Livre e Aberto</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- ABA 5: NOTÍCIAS -->
+        <section id="tab-news" class="tab-content mt-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-blue-400">
+                <i class="fa-solid fa-newspaper"></i> Mural de Notícias
+            </h2>
+            <div class="space-y-4">
+                <div class="card-custom p-5">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs text-blue-400 font-semibold font-mono">20 de Outubro, 2026</span>
+                        <span class="text-xs bg-blue-950 text-blue-300 px-2 py-0.5 rounded border border-blue-800">Sistema</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">Atualização v2.6</h3>
+                    <p class="text-gray-300 text-sm mt-2 leading-relaxed">
+                        Central de alertas de desastres naturais no Brasil na barra superior (tremores, tempestades, enchentes, deslizamentos, seca e queimadas), contadores de aniversariantes e detector de sistema operacional e navegador aprimorado.
+                    </p>
+                </div>
+                <div class="card-custom p-5">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs text-blue-400 font-semibold font-mono">18 de Outubro, 2026</span>
+                        <span class="text-xs bg-blue-950 text-blue-300 px-2 py-0.5 rounded border border-blue-800">Sistema</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">Atualização v2.5</h3>
+                    <p class="text-gray-300 text-sm mt-2 leading-relaxed">
+                        Interface otimizada com barras estilo GNOME, suporte a detecção de SO, aviso de aniversários e previsão do tempo.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 6: CALENDÁRIO DE ANIVERSÁRIOS -->
+        <section id="tab-birthdays" class="tab-content mt-6">
+            <h2 class="text-xl font-bold mb-2 flex items-center gap-2 text-blue-400">
+                <i class="fa-solid fa-cake-candles"></i> Calendário de Aniversários
+            </h2>
+            <p class="text-gray-400 text-sm mb-4">Registro automático de datas comemorativas.</p>
+
+            <!-- CONTADORES -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div class="card-custom p-4">
+                    <span class="text-xs text-gray-400">Fazem aniversário hoje</span>
+                    <span id="bday-stat-today" class="block text-3xl font-extrabold text-white mt-1">0</span>
+                </div>
+                <div class="card-custom p-4">
+                    <span class="text-xs text-gray-400">Neste mês</span>
+                    <span id="bday-stat-month" class="block text-3xl font-extrabold text-white mt-1">0</span>
+                </div>
+                <div class="card-custom p-4">
+                    <span class="text-xs text-gray-400">Integrantes cadastrados</span>
+                    <span id="bday-stat-total" class="block text-3xl font-extrabold text-white mt-1">0</span>
+                </div>
+                <div class="card-custom p-4">
+                    <span class="text-xs text-gray-400">Próximo aniversário</span>
+                    <span id="bday-next-name" class="block text-sm font-bold text-white mt-2 break-words">—</span>
+                    <span id="bday-next-when" class="block text-xs text-blue-300 mt-0.5"></span>
+                </div>
+            </div>
+
+            <div class="card-custom overflow-hidden">
+                <div class="p-4 bg-gray-900/80 border-b border-gray-800 font-semibold text-xs uppercase tracking-wider text-gray-400">
+                    Integrantes Cadastrados
+                </div>
+                <div id="birthday-list" class="divide-y divide-gray-800">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL POPUP DE PREVISÃO DO TEMPO -->
+    <div id="weather-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#13131a] border border-blue-500/40 w-full max-w-4xl rounded-2xl p-6 shadow-2xl relative max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-4 mb-4">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-cloud-bolt text-2xl text-blue-400"></i>
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Clima em Tempo Real nas Capitais</h3>
+                        <p class="text-xs text-gray-400">Dados meteorológicos</p>
+                    </div>
+                </div>
+                <button onclick="toggleWeatherModal()" class="text-gray-400 hover:text-white text-xl cursor-pointer" aria-label="Fechar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="weather-modal-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <!-- Preenchido via JS -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- JS separado -->
+    <script src="script.js"></script>
+</body>
+</html>

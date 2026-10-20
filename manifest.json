@@ -1,0 +1,26 @@
+{
+  "id": "./",
+  "name": "DEATH CLUB",
+  "short_name": "DEATH CLUB",
+  "description": "Hub central do DEATH CLUB: links, biblioteca, aniversários, clima e alertas de desastres no Brasil.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#0b0b0e",
+  "theme_color": "#0b0b0e",
+  "categories": ["social", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Aniversários", "short_name": "Aniversários", "url": "./#birthdays", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Hub de Links", "short_name": "Links", "url": "./#hub", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Biblioteca", "short_name": "Biblioteca", "url": "./#library", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
