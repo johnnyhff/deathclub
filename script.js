@@ -70,7 +70,7 @@ function user() {
 // 1. LISTA DE ANIVERSÁRIOS (EDITE AQUI 'MM-DD')
 // ==========================================
 const birthdays = [
-    { name: "Kiwi", date: "01-10" },
+    { name: "Kiwi", date: "01-14" },
     { name: "Pedro Toppem", date: "01-14" },
     { name: "Juan", date: "01-15" },
     { name: "Kauan", date: "01-18" },
